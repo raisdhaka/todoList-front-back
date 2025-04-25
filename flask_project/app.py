@@ -12,7 +12,8 @@ import random
 from datetime import datetime
 from sqlalchemy.sql import func
 from gevent import monkey
-
+from dotenv import load_dotenv
+load_dotenv()
 # Initialize Flask App
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -45,19 +46,18 @@ api = Api(app)
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 
 # Configure MySQL Database on AWS RDS
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://admin:Arkane1.@flask-project-db.cjo6cswwg3bx.us-east-2.rds.amazonaws.com:3306/flask_project"
+print(os.getenv('DATABASE_URL'))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = "supersecretkey"  # Change this in production
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    app.config['SQLALCHEMY_DATABASE_URI']
-)
 
 # Google OAuth Configuration
-app.config["GOOGLE_CLIENT_ID"] = "367806865319-i8f7c705aibohpipt9djeg6utopt5k3e.apps.googleusercontent.com"
-app.config["GOOGLE_CLIENT_SECRET"] = "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"
-app.config["GOOGLE_REDIRECT_URI"] = "http://127.0.0.1:5000/google-callback"
+app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
+app.config["GOOGLE_CLIENT_SECRET"] = os.getenv("GOOGLE_CLIENT_SECRET")
+app.config["GOOGLE_REDIRECT_URI"] = os.getenv("GOOGLE_REDIRECT_URI")
+
+
 
 # Initialize Extensions
 db = SQLAlchemy(app)
