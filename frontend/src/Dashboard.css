@@ -1,0 +1,59 @@
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Column styling */
+.column {
+  min-height: 500px;
+}
+
+.column-todo {
+  background-color: rgba(219, 234, 254, 0.3);
+  border-top: 4px solid #3b82f6 !important;
+}
+
+.column-inprogress {
+  background-color: rgba(254, 243, 199, 0.3);
+  border-top: 4px solid #f59e0b !important;
+}
+
+.column-done {
+  background-color: rgba(220, 252, 231, 0.3);
+  border-top: 4px solid #10b981 !important;
+}
+
+/* Task card styling */
+.task-card {
+  cursor: grab;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+/* Droppable area styling */
+.droppable-col {
+  min-height: 100px;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 15px;
+  }
+  
+  .column {
+    min-height: 300px;
+    margin-bottom: 20px;
+  }
+}
