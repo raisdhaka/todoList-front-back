@@ -110,7 +110,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchTasks();
+    // fetchTasks();
   }, []);
 
   const handleUnauthorized = () => {
@@ -133,6 +133,7 @@ const Dashboard = () => {
   };
 
   const fetchTasks = async () => {
+    console.log("Fetching tasks..."); // Debug log
     try {
       if(!roomCode) return;
       const token = localStorage.getItem("token");
