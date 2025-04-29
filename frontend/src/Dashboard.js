@@ -132,14 +132,14 @@ const Dashboard = () => {
     return false;
   };
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (roomCodeParam = roomCode) => {
     console.log("Fetching tasks..."); // Debug log
     try {
-      if(!roomCode) return;
+      if(!roomCodeParam) return;
       const token = localStorage.getItem("token");
       if (!token) return handleUnauthorized();
 
-      const res = await axios.get(`${API_URL}/tasks?room_code=${roomCode}`, {
+      const res = await axios.get(`${API_URL}/tasks?room_code=${roomCodeParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -348,7 +348,11 @@ const Dashboard = () => {
 
       const data = await res.json();
       setRoomCode(data.code);
-      fetchTasks();
+
+      setColumns(columnsFromBackend);
+
+      fetchTasks(data.code);
+
       if (socket) {
         socket.emit("join_room", { room_code: data.code });
       }
