@@ -17,6 +17,7 @@ load_dotenv()
 # Initialize Flask App
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
+site_url= os.getenv('SITE_URL')
 
 # Allow cross-origin requests from your React app
 # CORS(
@@ -43,7 +44,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 api = Api(app)
 
 # Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
+socketio = SocketIO(app, cors_allowed_origins=f"{site_url}")
 
 # Configure MySQL Database on AWS RDS
 print(os.getenv('DATABASE_URL'))
@@ -79,6 +80,7 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(6), unique=True, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    tasks = db.relationship("Task", backref="room", lazy=True)  # One-to-many relationship
 
 # Define Task Model
 class Task(db.Model):
@@ -87,6 +89,7 @@ class Task(db.Model):
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default="Not Started")  # "In Progress", "Completed"
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey("room.id"), nullable=False)  # Foreign key to Room
 
 # Helper to generate unique 6-character codes
 def generate_room_code(length=6):
@@ -289,8 +292,29 @@ class TaskAPI(Resource):
         user = User.query.get(current_user)
         if not user:
             return jsonify({"message": "User not found"}), 404
-        tasks = Task.query.filter_by(user_id=user.id).all()
-        return jsonify([{ "id": t.id, "title": t.title, "status": t.status } for t in tasks])
+
+        # Get the room code from the request arguments
+        room_code = request.args.get("room_code")
+        if not room_code:
+            return jsonify({"error": "Room code is required"}), 400
+
+        # Find the room by the provided code
+        room = Room.query.filter_by(code=room_code).first()
+        if not room:
+            return jsonify({"message": "Room not found"}), 404
+
+        # Fetch tasks for the user in the specified room
+        tasks = Task.query.filter_by(user_id=user.id, room_id=room.id).all()
+        return jsonify([
+            {
+                "id": t.id,
+                "title": t.title,
+                "description": t.description,
+                "status": t.status,
+                "room_id": t.room_id
+            }
+            for t in tasks
+        ])
 
     @jwt_required()
     def post(self):
@@ -303,11 +327,16 @@ class TaskAPI(Resource):
         if not user:
             return {"message": "User not found"}, 404
 
+        room = Room.query.filter_by(code=data.get("room_code")).first()
+        if not room:
+            return {"message": "Room not found"}, 404
+
         new_task = Task(
             title=data["title"],
             description=data.get("description", ""),
             status=data.get("status", "todo").lower(),
-            user_id=user.id
+            user_id=user.id,
+            room_id=room.id  # Associate task with the room
         )
         db.session.add(new_task)
         db.session.commit()
@@ -315,7 +344,8 @@ class TaskAPI(Resource):
         task_data = {
             "id": new_task.id,
             "title": new_task.title,
-            "status": new_task.status
+            "status": new_task.status,
+            "room_id": new_task.room_id
         }
         notify_task_update(current_user, task_data, 'create')
         

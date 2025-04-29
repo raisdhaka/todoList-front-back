@@ -91,14 +91,14 @@ const Dashboard = () => {
         fetchTasks(); // Refresh tasks
       });
     }
-  
+
     return () => {
       if (socket) {
         socket.off("task_update");
       }
     };
   }, [socket]);
-  
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get("token");
@@ -136,13 +136,13 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return handleUnauthorized();
-  
-      const res = await axios.get(`${API_URL}/tasks`, {
+
+      const res = await axios.get(`${API_URL}/tasks?room_code=${roomCode}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-  
+
       console.log("Fetched tasks:", res.data); // Debug response
-  
+
       const tasks = res.data;
       setColumns({
         todo: { ...columns.todo, items: tasks.filter(t => t.status === "todo") },
@@ -162,7 +162,7 @@ const Dashboard = () => {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-  
+
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
@@ -170,13 +170,14 @@ const Dashboard = () => {
         {
           title: newTask,
           description: "",
-          status: "todo"
+          status: "todo",
+          room_code: roomCode
         },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-  
+
       console.log("Task creation response:", res.data); // Debug response
       setNewTask(""); // Clear input field
       fetchTasks(); // Refresh tasks
@@ -281,7 +282,7 @@ const Dashboard = () => {
         handleUnauthorized();
         return;
       }
-  
+
       setJoinMessage("");
       const res = await fetch(`${API_URL}/create-room`, {
         method: "POST",
@@ -291,12 +292,12 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`
         }
       });
-  
+
       if (!res.ok) throw new Error("Failed to create room");
-  
+
       const data = await res.json();
       setNewRoomCode(data.code); // Update the state with the new room code
-  
+
       if (socket && socket.connected) {
         socket.emit("join_room", {
           room_code: data.code,
@@ -371,6 +372,16 @@ const Dashboard = () => {
           <Card.Title className="mb-3">Collaboration Room</Card.Title>
 
           <Row className="g-3 mb-3">
+            <Col md={12}>
+              {roomCode && (
+                <Card className="mt-3">
+                  <Card.Body className="text-center">
+                    <Card.Title>Joined Room</Card.Title>
+                    <Badge bg="success" className="fs-6">{roomCode}</Badge>
+                  </Card.Body>
+                </Card>
+              )}
+            </Col>
             <Col md={6}>
               <Button
                 variant="primary"
@@ -386,26 +397,34 @@ const Dashboard = () => {
                   <Badge bg="success" className="fs-6">{newRoomCode}</Badge>
                 </div>
               )}
+
             </Col>
 
             <Col md={6}>
-              <div className="d-flex">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter Room Code"
-                  value={joinInput}
-                  onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
-                  className="me-2"
-                  disabled={isLoading}
-                />
-                <Button
-                  variant="primary"
-                  onClick={handleJoinRoom}
-                  disabled={isLoading}
-                >
-                  <FiLogIn className="me-1" /> Join
-                </Button>
-              </div>
+
+              <Card className="mb-4 shadow-sm">
+                <Card.Body>
+                  <div className="d-flex">
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter Room Code"
+                      value={joinInput}
+                      onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
+                      className="me-2"
+                      disabled={isLoading}
+                    />
+                    <Button
+                      variant="primary"
+                      onClick={handleJoinRoom}
+                      disabled={isLoading}
+                    >
+                      <FiLogIn className="me-1" /> Join
+                    </Button>
+                  </div>
+
+
+                </Card.Body>
+              </Card>
               {joinMessage && (
                 <Alert variant={joinMessage.includes("Joined") ? "success" : "warning"} className="mt-2 mb-0">
                   {joinMessage}
