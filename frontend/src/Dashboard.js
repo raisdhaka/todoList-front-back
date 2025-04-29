@@ -134,6 +134,7 @@ const Dashboard = () => {
 
   const fetchTasks = async () => {
     try {
+      if(!roomCode) return;
       const token = localStorage.getItem("token");
       if (!token) return handleUnauthorized();
 
