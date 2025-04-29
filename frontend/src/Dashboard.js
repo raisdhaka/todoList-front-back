@@ -349,6 +349,8 @@ const Dashboard = () => {
       if (socket) {
         socket.emit("join_room", { room_code: data.code });
       }
+
+      fetchTasks();
     } catch (error) {
       if (!checkAuthError(error)) {
         console.error("Failed to join room", error);
