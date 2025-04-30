@@ -27,7 +27,29 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
+  const EXPIRY_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+
+  useEffect(() => {
+    const storedRoom = localStorage.getItem("roomCode");
+    if (storedRoom) {
+      try {
+        const { code, timestamp } = JSON.parse(storedRoom);
+        if (Date.now() - timestamp < EXPIRY_DURATION) {
+          setRoomCode(code);
+          fetchTasks(code);
+          if (socket) {
+            socket.emit("join_room", { room_code: code });
+          }
+        } else {
+          localStorage.removeItem("roomCode");
+        }
+      } catch (err) {
+        console.error("Error parsing roomCode from localStorage:", err);
+        localStorage.removeItem("roomCode");
+      }
+    }
+  }, [socket]);
   // Initialize socket connection
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -348,6 +370,10 @@ const Dashboard = () => {
 
       const data = await res.json();
       setRoomCode(data.code);
+      localStorage.setItem("roomCode", JSON.stringify({
+        code: data.code,
+        timestamp: Date.now()
+      }));
 
       setColumns(columnsFromBackend);
 
