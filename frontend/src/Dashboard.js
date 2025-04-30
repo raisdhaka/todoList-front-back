@@ -136,12 +136,19 @@ const Dashboard = () => {
   }, []);
 
   const handleUnauthorized = () => {
+    setError("Session expired. Redirecting to login...");
+
     localStorage.removeItem("token");
-    navigate("/login");
+    localStorage.removeItem("roomCode");
+    setTimeout(() => {
+      navigate("/login");
+    }, 3000); // 3-second delay
   };
 
   const checkAuthError = (error) => {
-    if (error.response?.status === 401) {
+    const message = error?.response?.data?.msg;
+
+    if (error.response?.status === 401 || message === "Token has expired") {
       handleUnauthorized();
       return true;
     }
@@ -372,7 +379,11 @@ const Dashboard = () => {
         },
         body: JSON.stringify({ code: joinInput.trim().toUpperCase() })
       });
-
+      console.log("Join room response:", res); // Debug response
+      if (res.status === 401) {
+        // const error = await res.json();
+        handleUnauthorized();
+      }
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to join room");
