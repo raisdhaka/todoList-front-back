@@ -339,6 +339,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleLeaveRoom = () => {
+    if (socket && roomCode) {
+      socket.emit("leave_room", { room_code: roomCode });
+    }
+    setRoomCode("");
+    setColumns(columnsFromBackend);
+    localStorage.removeItem("roomCode");
+    setJoinMessage("You have left the room.");
+  };
+
   const handleJoinRoom = async () => {
     if (!joinInput.trim()) {
       setJoinMessage("Please enter a room code");
@@ -412,6 +422,11 @@ const Dashboard = () => {
                   <Card.Body className="text-center">
                     <Card.Title>Joined Room</Card.Title>
                     <Badge bg="success" className="fs-6">{roomCode}</Badge>
+                    <div className="mt-2">
+                      <Button variant="outline-danger" size="sm" onClick={handleLeaveRoom}>
+                        Leave Room
+                      </Button>
+                    </div>
                   </Card.Body>
                 </Card>
               )}
@@ -454,6 +469,8 @@ const Dashboard = () => {
                     >
                       <FiLogIn className="me-1" /> Join
                     </Button>
+
+                    
                   </div>
 
 
@@ -479,13 +496,13 @@ const Dashboard = () => {
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               className="me-2"
-              disabled={isLoading}
+              disabled={isLoading || !roomCode}
             />
             <Button
               variant="primary"
               className="col-sm-2"
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !roomCode}
             >
               <FiPlus className="me-1" /> Add Task
             </Button>
