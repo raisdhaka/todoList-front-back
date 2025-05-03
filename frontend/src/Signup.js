@@ -23,6 +23,8 @@ const Signup = () => {
         throw new Error("Failed to register. Please try again.");
       }
 
+      localStorage.removeItem("token");
+      localStorage.removeItem("roomCode");
       alert("Signup successful! Redirecting to login...");
       navigate("/login");
     } catch (error) {
