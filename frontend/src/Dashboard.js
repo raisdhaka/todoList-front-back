@@ -145,6 +145,16 @@ const Dashboard = () => {
     }, 3000); // 3-second delay
   };
 
+  const handleLogout = () => {
+    setError("Loging out. Redirecting to login...");
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("roomCode");
+    setTimeout(() => {
+      navigate("/login");
+    }, 3000); // 3-second delay
+  };
+
   const checkAuthError = (error) => {
     const message = error?.response?.data?.msg;
 
@@ -415,10 +425,14 @@ const Dashboard = () => {
   return (
     <Container fluid className="dashboard-container py-4">
       <Row className="mb-4">
-        <Col>
+        <div className="d-flex justify-content-between">
           <h2 className="fw-bold">Task Board</h2>
           {error && <Alert variant="danger" onClose={() => setError("")} dismissible>{error}</Alert>}
-        </Col>
+          <Button variant="outline-danger" size="sm" onClick={handleLogout} className="float-end">
+                      <FiLogIn className="me-1" />
+                        Logout
+                      </Button>
+        </div>
       </Row>
 
       {/* Room Section */}
