@@ -132,7 +132,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    // fetchTasks();
+    fetchTasks();
   }, []);
 
   const handleUnauthorized = () => {
@@ -173,8 +173,12 @@ const Dashboard = () => {
 
   const fetchTasks = async (roomCodeParam = roomCode) => {
     console.log("Fetching tasks..."); // Debug log
+    console.log("Room code:", roomCodeParam); // Debug log
     try {
-      if(!roomCodeParam) return;
+      if(!roomCodeParam){
+        roomCodeParam = 0;
+      }
+
       const token = localStorage.getItem("token");
       if (!token) return handleUnauthorized();
 
@@ -202,17 +206,19 @@ const Dashboard = () => {
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!newTask.trim()) return;
 
+    if (!newTask.trim()) return;
+    
     try {
       const token = localStorage.getItem("token");
+      
       const res = await axios.post(
         `${API_URL}/tasks`,
         {
           title: newTask,
           description: "",
           status: "todo",
-          room_code: roomCode
+          room_code: roomCode? roomCode : 0
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -360,10 +366,15 @@ const Dashboard = () => {
     if (socket && roomCode) {
       socket.emit("leave_room", { room_code: roomCode });
     }
-    setRoomCode("");
-    setColumns(columnsFromBackend);
     localStorage.removeItem("roomCode");
+    setColumns(columnsFromBackend);
     setJoinMessage("You have left the room.");
+    setNewRoomCode("");
+    
+    setJoinInput("");
+    setRoomCode("");
+    console.log("roomcode ...", roomCode);
+    fetchTasks(0); 
   };
 
   const handleJoinRoom = async () => {
@@ -521,13 +532,13 @@ const Dashboard = () => {
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
               className="me-2"
-              disabled={isLoading || !roomCode}
+              disabled={isLoading}
             />
             <Button
               variant="primary"
               className="col-sm-2"
               type="submit"
-              disabled={isLoading || !roomCode}
+              disabled={isLoading}
             >
               <FiPlus className="me-1" /> Add Task
             </Button>

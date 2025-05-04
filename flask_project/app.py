@@ -24,9 +24,9 @@ site_url= os.getenv('SITE_URL')
 #     app,
 #     supports_credentials=True,
 #     resources={
-#         r"/create-room": {"origins": ["http://localhost:3000"]},
-#         r"/join-room":   {"origins": ["http://localhost:3000"]},
-#         r"/*":           {"origins": ["http://localhost:3000"]}
+#         r"/create-room": {"origins": ["https://tasktrackers.fun"]},
+#         r"/join-room":   {"origins": ["https://tasktrackers.fun"]},
+#         r"/*":           {"origins": ["https://tasktrackers.fun"]}
 #     }
 # )
 
@@ -250,11 +250,11 @@ def google_callback():
         db.session.commit()
 
     token = create_access_token(identity=str(user.id))
-    return redirect(f"http://localhost:3000/dashboard?token={token}")
+    return redirect(f"https://tasktrackers.fun/dashboard?token={token}")
 
 # Create Room Endpoint
 @app.route("/create-room", methods=["POST"])
-@cross_origin(origin="http://localhost:3000", supports_credentials=True)
+@cross_origin(origin="https://tasktrackers.fun", supports_credentials=True)
 @jwt_required()
 def create_room():
     user_id = get_jwt_identity()
@@ -295,16 +295,23 @@ class TaskAPI(Resource):
 
         # Get the room code from the request arguments
         room_code = request.args.get("room_code")
-        if not room_code:
-            return jsonify({"error": "Room code is required"}), 400
-
-        # Find the room by the provided code
-        room = Room.query.filter_by(code=room_code).first()
-        if not room:
-            return jsonify({"message": "Room not found"}), 404
+        print(f"Room code received: {room_code}")
+        if room_code != '0':  
+                      
+            room = Room.query.filter_by(code=room_code).first()
+            room_id= room.id
+            if not room:
+                return jsonify({"message": "Room not found"}), 404
+            else:
+                room_id = room.id
+        else:
+            room_id = 0
 
         # Fetch tasks for the user in the specified room
-        tasks = Task.query.filter_by(user_id=user.id, room_id=room.id).all()
+        tasks = Task.query.filter_by(user_id=user.id, room_id=room_id).all()
+        print(f"Tasks fetched for user {user.id} in room {room_id}: {[t.title for t in tasks]}")
+        if not tasks:
+            return jsonify({"message": "No tasks found"}), 404
         return jsonify([
             {
                 "id": t.id,
@@ -326,17 +333,21 @@ class TaskAPI(Resource):
         user = User.query.get(current_user)
         if not user:
             return {"message": "User not found"}, 404
-
-        room = Room.query.filter_by(code=data.get("room_code")).first()
-        if not room:
-            return {"message": "Room not found"}, 404
+        room_code = data.get("room_code")
+        if room_code != 0:
+            room = Room.query.filter_by(code=data.get("room_code")).first()
+            room_id = room.id
+            if not room:
+                return {"message": "Room not found"}, 404
+        else:
+            room_id = 0
 
         new_task = Task(
             title=data["title"],
             description=data.get("description", ""),
             status=data.get("status", "todo").lower(),
             user_id=user.id,
-            room_id=room.id  # Associate task with the room
+            room_id=room_id  # Associate task with the room
         )
         db.session.add(new_task)
         db.session.commit()
