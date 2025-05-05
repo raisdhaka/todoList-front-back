@@ -261,7 +261,9 @@ const Dashboard = () => {
         `${API_URL}/tasks/${taskId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setColumns(columnsFromBackend);
       fetchTasks();
+      setMessage("Task deleted successfully");
     } catch (error) {
       if (!checkAuthError(error)) {
         console.error("Failed to delete task:", error);
@@ -286,6 +288,7 @@ const Dashboard = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         fetchTasks();
+        setMessage("Task updated successfully");
       } catch (error) {
         if (!checkAuthError(error)) {
           console.error("Failed to edit task:", error);
