@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [joinInput, setJoinInput] = useState("");
   const [joinMessage, setJoinMessage] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
@@ -175,7 +176,7 @@ const Dashboard = () => {
     console.log("Fetching tasks..."); // Debug log
     console.log("Room code:", roomCodeParam); // Debug log
     try {
-      if(!roomCodeParam){
+      if (!roomCodeParam) {
         roomCodeParam = 0;
       }
 
@@ -187,6 +188,12 @@ const Dashboard = () => {
       });
 
       console.log("Fetched tasks:", res.data); // Debug response
+
+      if (res.data.error == true) {
+        setMessage("No tasks found");
+        return;
+
+      }
 
       const tasks = res.data;
       setColumns({
@@ -208,17 +215,17 @@ const Dashboard = () => {
     e.preventDefault();
 
     if (!newTask.trim()) return;
-    
+
     try {
       const token = localStorage.getItem("token");
-      
+
       const res = await axios.post(
         `${API_URL}/tasks`,
         {
           title: newTask,
           description: "",
           status: "todo",
-          room_code: roomCode? roomCode : 0
+          room_code: roomCode ? roomCode : 0
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -370,11 +377,11 @@ const Dashboard = () => {
     setColumns(columnsFromBackend);
     setJoinMessage("You have left the room.");
     setNewRoomCode("");
-    
+
     setJoinInput("");
     setRoomCode("");
     console.log("roomcode ...", roomCode);
-    fetchTasks(0); 
+    fetchTasks(0);
   };
 
   const handleJoinRoom = async () => {
@@ -433,16 +440,29 @@ const Dashboard = () => {
     }
   };
 
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage(""); // Clear the message after 2 seconds
+      }, 2000);
+
+      return () => clearTimeout(timer); // Cleanup the timer if the component unmounts or message changes
+    }
+  }, [message]);
+
+
   return (
     <Container fluid className="dashboard-container py-4">
       <Row className="mb-4">
         <div className="d-flex justify-content-between">
           <h2 className="fw-bold">Task Board</h2>
           {error && <Alert variant="danger" onClose={() => setError("")} dismissible>{error}</Alert>}
+          {message && <Alert variant="info" onClose={() => setMessage("")} dismissible>{message}</Alert>}
           <Button variant="outline-danger" size="sm" onClick={handleLogout} className="float-end">
-                      <FiLogIn className="me-1" />
-                        Logout
-                      </Button>
+            <FiLogIn className="me-1" />
+            Logout
+          </Button>
         </div>
       </Row>
 
@@ -506,7 +526,7 @@ const Dashboard = () => {
                       <FiLogIn className="me-1" /> Join
                     </Button>
 
-                    
+
                   </div>
 
 

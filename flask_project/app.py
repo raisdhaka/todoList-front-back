@@ -19,20 +19,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 site_url= os.getenv('SITE_URL')
 
-# Allow cross-origin requests from your React app
-# CORS(
-#     app,
-#     supports_credentials=True,
-#     resources={
-#         r"/create-room": {"origins": ["https://tasktrackers.fun"]},
-#         r"/join-room":   {"origins": ["https://tasktrackers.fun"]},
-#         r"/*":           {"origins": ["https://tasktrackers.fun"]}
-#     }
-# )
 
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://tasktrackers.fun"],
+        "origins": [f"{site_url}"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -230,7 +220,7 @@ def google_callback():
         "redirect_uri": app.config["GOOGLE_REDIRECT_URI"],
         "grant_type": "authorization_code",
     }
-
+    print(f"Token data: {token_data}")
     token_response = requests.post("https://oauth2.googleapis.com/token", data=token_data)
     token_json = token_response.json()
     if "access_token" not in token_json:
@@ -250,11 +240,11 @@ def google_callback():
         db.session.commit()
 
     token = create_access_token(identity=str(user.id))
-    return redirect(f"https://tasktrackers.fun/dashboard?token={token}")
+    return redirect(f"{site_url}/dashboard?token={token}")
 
 # Create Room Endpoint
 @app.route("/create-room", methods=["POST"])
-@cross_origin(origin="https://tasktrackers.fun", supports_credentials=True)
+@cross_origin(origin=f"{site_url}", supports_credentials=True)
 @jwt_required()
 def create_room():
     user_id = get_jwt_identity()
@@ -310,8 +300,10 @@ class TaskAPI(Resource):
         # Fetch tasks for the user in the specified room
         tasks = Task.query.filter_by(user_id=user.id, room_id=room_id).all()
         print(f"Tasks fetched for user {user.id} in room {room_id}: {[t.title for t in tasks]}")
-        if not tasks:
-            return jsonify({"message": "No tasks found"}), 404
+        print(f"tasks: {tasks} {type(tasks)} {len(tasks)}")
+        if len(tasks) == 0:
+            print("No tasks found")
+            return jsonify({"message": "No tasks found", "error": True})
         return jsonify([
             {
                 "id": t.id,
