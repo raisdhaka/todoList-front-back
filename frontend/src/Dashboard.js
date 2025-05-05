@@ -126,9 +126,11 @@ const Dashboard = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get("token");
+    const user_idFromUrl = urlParams.get("user_id");
 
     if (tokenFromUrl) {
       localStorage.setItem("token", tokenFromUrl);
+      localStorage.setItem("user_id", user_idFromUrl);
       window.history.replaceState({}, document.title, "/dashboard");
     }
   }, []);

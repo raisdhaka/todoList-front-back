@@ -240,7 +240,7 @@ def google_callback():
         db.session.commit()
 
     token = create_access_token(identity=str(user.id))
-    return redirect(f"{site_url}/dashboard?token={token}")
+    return redirect(f"{site_url}/dashboard?token={token}&user_id={user.id}")
 
 # Create Room Endpoint
 @app.route("/create-room", methods=["POST"])
