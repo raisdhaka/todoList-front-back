@@ -188,7 +188,7 @@ def login():
     if bcrypt.check_password_hash(user.password, data.get("password")):
         token = create_access_token(identity=str(user.id))
         print(f"User {user.id} logged in with token: {token}")
-        return jsonify({"message": "Login successful", "token": token}), 200
+        return jsonify({"message": "Login successful", "user_id":user.id, "token": token}), 200
     else:
         return jsonify({"message": "Invalid password"}), 401
 
@@ -286,19 +286,18 @@ class TaskAPI(Resource):
         # Get the room code from the request arguments
         room_code = request.args.get("room_code")
         print(f"Room code received: {room_code}")
-        if room_code != '0':  
-                      
+        if room_code != '0':       
             room = Room.query.filter_by(code=room_code).first()
-            room_id= room.id
             if not room:
                 return jsonify({"message": "Room not found"}), 404
             else:
                 room_id = room.id
+            tasks = Task.query.filter_by(room_id=room_id).all()
         else:
             room_id = 0
+            tasks = Task.query.filter_by(user_id=user.id, room_id=room_id).all()
 
         # Fetch tasks for the user in the specified room
-        tasks = Task.query.filter_by(user_id=user.id, room_id=room_id).all()
         print(f"Tasks fetched for user {user.id} in room {room_id}: {[t.title for t in tasks]}")
         print(f"tasks: {tasks} {type(tasks)} {len(tasks)}")
         if len(tasks) == 0:
@@ -310,7 +309,8 @@ class TaskAPI(Resource):
                 "title": t.title,
                 "description": t.description,
                 "status": t.status,
-                "room_id": t.room_id
+                "room_id": t.room_id,
+                "user_id": t.user_id
             }
             for t in tasks
         ])

@@ -15,8 +15,11 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/login`, { email, password });
+      console.log(response.data);
+
       alert("Login Successful");
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user_id", response.data.user_id);
       navigate("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Invalid email or password");

@@ -30,6 +30,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const EXPIRY_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+  const user_id = localStorage.getItem("user_id");
 
   useEffect(() => {
     const storedRoom = localStorage.getItem("roomCode");
@@ -141,6 +142,7 @@ const Dashboard = () => {
 
     localStorage.removeItem("token");
     localStorage.removeItem("roomCode");
+    localStorage.removeItem("user_id");
     setTimeout(() => {
       navigate("/login");
     }, 3000); // 3-second delay
@@ -598,26 +600,28 @@ const Dashboard = () => {
                               >
                                 <Card.Body className="p-3 d-flex justify-content-between align-items-center">
                                   <span>{item.title}</span>
-                                  <div className="card-buttons">
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      onClick={() => handleEditTask(item)}
-                                      className="text-primary p-0"
-                                      disabled={isLoading}
-                                    >
-                                      <FiEdit2 />
-                                    </Button>
-                                    <Button
-                                      variant="link"
-                                      size="sm"
-                                      onClick={() => handleDeleteTask(item.id)}
-                                      className="text-danger p-0 ms-2"
-                                      disabled={isLoading}
-                                    >
-                                      <FiTrash2 />
-                                    </Button>
-                                  </div>
+                                  {item.user_id == user_id && (
+                                    <div className="card-buttons">
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        onClick={() => handleEditTask(item)}
+                                        className="text-primary p-0"
+                                        disabled={isLoading}
+                                      >
+                                        <FiEdit2 />
+                                      </Button>
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        onClick={() => handleDeleteTask(item.id)}
+                                        className="text-danger p-0 ms-2"
+                                        disabled={isLoading}
+                                      >
+                                        <FiTrash2 />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </Card.Body>
                               </Card>
                             )}
